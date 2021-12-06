@@ -1,0 +1,84 @@
+Instruction about how to set up personal VPN via Docker
+Student Name: zhiyuan Ren
+1.	First of all, we should build a ubuntu droplet.  Go to the link below and create your account
+https://m.do.co/c/4d7f4ff9cfe4 
+2.	after create account, pick a droplet. Ubuntu 20.04 ,Basic and Regular intel CPU is required. You can choose Other option whatever you like
+3.	after build the sever. Turn it on then open the console so you can access it by command.
+4.	Install docker. 
+sudo apt install apt-transport-https ca-certificates curl software-properties-common -y
+This command install the necessary tools
+5.	 
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add –
+Add Docker Key  
+
+6.	Add a Docker repo.
+This is for 32bit/64bit OS
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+
+
+7.	Install Docker
+sudo apt install docker-ce -y
+
+
+
+8.	Install Docker-Compose
+sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+9.	Set the permission so that we can execute file
+sudo chmod +x /usr/local/bin/docker-compose
+10.	Run these 3 command to create two directory and a compose file.
+mkdir -p ~/wireguard/
+mkdir -p ~/wireguard/config/
+nano ~/wireguard/docker-compose.yml
+
+11.	Copy the following text to docker-compose.yml
+Change the TZ to your timezone
+Change the SERVERURL to your server’s Ip address which can check on the digital ocean website.
+
+version: '3.8'
+services:
+wireguard:
+container_name: wireguard
+image: linuxserver/wireguard
+environment:
+- PUID=1000
+- PGID=1000
+- TZ=Asia/Hong_Kong
+- SERVERURL= 147.182.245.28
+- SERVERPORT=51820
+- PEERS=pc1,pc2,phone1
+- PEERDNS=auto
+- INTERNAL_SUBNET=10.0.0.0
+ports:
+- 51820:51820/udp
+volumes:
+- type: bind
+source: ./config/
+target: /config/
+- type: bind
+source: /lib/modules
+target: /lib/modules
+restart: always
+cap_add:
+- NET_ADMIN
+- SYS_MODULE
+sysctls:
+- net.ipv4.conf.all.src_valid_mark=1
+
+
+12.	Comes to the directory which our compose file locate and use this file to build wireguard.
+
+cd ~/wireguard/
+docker-compose up -d
+13.	You will see the QR code of wireguard VPN by running following command.it can be used on your phone. Download the wireguard application and create from QR code to connect to wireguard.
+docker-compose logs -f wireguard
+14.	For PC, go to this website to install wireguard.
+Installation - WireGuard
+After install finished. Use the sever console comes to this directory
+~/wireguard/config/{username} and look for the file which username.conf
+Copy it down to your computer. Then open the wireguard and add the new tunnel by the file you just copy from sever.
+
+15.	Comes to https://ipleak.net/ to  test your ip address with VPN/without VPN
